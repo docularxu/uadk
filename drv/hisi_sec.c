@@ -903,6 +903,9 @@ static int fill_cipher_bd2_mode(struct wd_cipher_msg *msg,
 	case WD_CIPHER_XTS:
 		c_mode = C_MODE_XTS;
 		break;
+	case WD_CIPHER_CTR:
+		c_mode = C_MODE_CTR;
+		break;
 	default:
 		WD_ERR("failed to check cipher mode type, mode = %u\n",
 		       msg->mode);
