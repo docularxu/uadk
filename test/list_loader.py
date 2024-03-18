@@ -26,6 +26,7 @@ class listcontent(object):
     def deflate(self, olist, blk_sz):
         ifile_sz = os.path.getsize(self.ifile_nm)
         count = (ifile_sz + int(blk_sz) - 1) / int(blk_sz)
+        count = int(count)
         # Create array
         data = np.ndarray(count * 3, dtype=np.uint64)
         entries = data.reshape(-1, 3)

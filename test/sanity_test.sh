@@ -13,6 +13,8 @@
 # $sudo LD_LIBRARY_PATH={library path} PATH={bin path}	\
 # C_INCLUDE_PATH={head path} sanity_test.sh
 
+set -x
+
 #VALGRIND=valgrind
 
 have_hisi_zip=0
@@ -157,7 +159,7 @@ sw_blk_deflate()
 	case $3 in
 	"gzip")
 		${RM} -f /tmp/gzip_list.bin
-		python test/list_loader.py --in $1 --out $2 --olist /tmp/gzip_list.bin -b $4
+		python3 test/list_loader.py --in $1 --out $2 --olist /tmp/gzip_list.bin -b $4
 		;;
 	*)
 		echo "Unsupported algorithm type: $3"
@@ -359,7 +361,7 @@ run_zip_test_v2()
 	# test without environment variables
 	# limit test file in 64MB
 	rm -fr /tmp/syslog
-	dd if=/var/log/syslog of=/tmp/syslog bs=1M count=16 >& /dev/null
+	dd if=/var/log/dpkg.log of=/tmp/syslog bs=1M count=16 >& /dev/null
 	sw_dfl_hw_ifl /tmp/syslog
 	hw_dfl_sw_ifl /tmp/syslog
 	WD_COMP_EPOLL_EN=1 hw_dfl_hw_ifl /tmp/syslog
