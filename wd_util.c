@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include "wd_sched.h"
 #include "wd_util.h"
-#include <stdio.h>
 
 #define WD_ASYNC_DEF_POLL_NUM		1
 #define WD_ASYNC_DEF_QUEUE_DEPTH	1024
@@ -2430,10 +2429,6 @@ static int wd_init_ctx_set(struct wd_init_attrs *attrs, struct uacce_dev_list *l
 	struct uacce_dev *dev;
 	__u32 i, cnt = 0;
 
-	fprintf(stderr, "enter %s()\n", __func__);
-	fprintf(stderr, "count=idx+ctx_set_num = %d, %s()\n", count, __func__);
-	fflush(stderr);
-
 	/* If the ctx set number is 0, the initialization is skipped. */
 	if (!ctx_set_num)
 		return 0;
@@ -2444,8 +2439,6 @@ static int wd_init_ctx_set(struct wd_init_attrs *attrs, struct uacce_dev_list *l
 
 	for (i = idx; i < count; i++) {
 		ctx_config->ctxs[i].ctx = wd_request_ctx(dev);
-		fprintf(stderr, "i=%d, %s()\n", i, __func__);
-
 		if (errno == WD_EBUSY) {
 			dev = wd_find_dev_by_numa(list, numa_id);
 			if (WD_IS_ERR(dev))
@@ -2464,8 +2457,6 @@ static int wd_init_ctx_set(struct wd_init_attrs *attrs, struct uacce_dev_list *l
 			 * wd_release_ctx_set will release ctx in
 			 * caller wd_init_ctx_and_sched.
 			 */
-			fprintf(stderr, "hit here: because 'wd_request_ctx() returns NULL, and errno is not WD_EBUSY, %s()\n", __func__);
-			fflush(stderr);
 			return -WD_ENOMEM;
 		}
 		ctx_config->ctxs[i].op_type = op_type;
@@ -2522,25 +2513,15 @@ static int wd_init_ctx_and_sched(struct wd_init_attrs *attrs, struct bitmask *bm
 	struct wd_ctx_nums ctx_nums;
 	__u32 j, idx = 0;
 
-	fprintf(stderr, "enter %s(), i: max_node=numa_max_node()+1=%d\n", __func__, max_node);
-	fprintf(stderr, "enter %s(), j: op_type_num=%d\n", __func__, op_type_num);
-	fflush(stderr);
-
 	for (i = 0; i < max_node; i++) {
 		if (!numa_bitmask_isbitset(bmp, i))
 			continue;
 		for (j = 0; j < op_type_num; j++) {
 			ctx_nums = ctx_params->ctx_set_num[j];
 			ret = wd_init_ctx_set(attrs, list, idx, i, j);
-			fprintf(stderr, "wp0, %s(), wd_init_ctx_set(), ret=%d, i=%d, j=%d, idx=%d\n", __func__, ret, i, j, idx);
-			fflush(stderr);
 			if (ret)
 				goto free_ctxs;
 			ret = wd_instance_sched_set(attrs->sched, ctx_nums, idx, i, j);
-			fprintf(stderr, "wp0, %s(), wd_nstance_sched_set(), ret=%d, i=%d, j=%d, idx=%d\n", 
-					__func__, ret, i, j, idx);
-			fflush(stderr);
-
 			if (ret)
 				goto free_ctxs;
 			idx += (ctx_nums.sync_ctx_num + ctx_nums.async_ctx_num);
@@ -2575,17 +2556,11 @@ static int wd_alg_ctx_init(struct wd_init_attrs *attrs)
 	__u32 ctx_set_num, op_type_num;
 	int numa_cnt, ret;
 
-	fprintf(stderr, "enter %s()\n", __func__);
-	fflush(stderr);
-
 	list = wd_get_accel_list(attrs->alg);
 	if (!list) {
 		WD_ERR("failed to get devices!\n");
 		return -WD_ENODEV;
 	}
-
-	fprintf(stderr, "wp0, %s()\n", __func__);
-	fflush(stderr);
 
 	op_type_num = ctx_params->op_type_num;
 	ctx_set_num = wd_get_ctx_numbers(*ctx_params, op_type_num);
@@ -2595,9 +2570,6 @@ static int wd_alg_ctx_init(struct wd_init_attrs *attrs)
 		ret = -WD_EINVAL;
 		goto out_freelist;
 	}
-
-	fprintf(stderr, "wp1, %s()\n", __func__);
-	fflush(stderr);
 
 	/*
 	 * Not every numa has a device. Therefore, the first thing is to
@@ -2611,9 +2583,6 @@ static int wd_alg_ctx_init(struct wd_init_attrs *attrs)
 		goto out_freelist;
 	}
 
-	fprintf(stderr, "wp2, %s()\n", __func__);
-	fflush(stderr);
-
 	wd_init_device_nodemask(used_list, used_bmp);
 
 	numa_cnt = numa_bitmask_weight(used_bmp);
@@ -2623,9 +2592,6 @@ static int wd_alg_ctx_init(struct wd_init_attrs *attrs)
 		goto out_freeusedlist;
 	}
 
-	fprintf(stderr, "wp3, %s()\n", __func__);
-	fflush(stderr);
-
 	ctx_config->ctx_num = ctx_set_num * numa_cnt;
 	ctx_config->ctxs = calloc(ctx_config->ctx_num, sizeof(struct wd_ctx));
 	if (!ctx_config->ctxs) {
@@ -2634,13 +2600,7 @@ static int wd_alg_ctx_init(struct wd_init_attrs *attrs)
 		goto out_freeusedlist;
 	}
 
-	fprintf(stderr, "wp4, %s()\n", __func__);
-	fflush(stderr);
-
 	ret = wd_init_ctx_and_sched(attrs, used_bmp, used_list);
-	fprintf(stderr, "wp5, %s(), ret=wd_init_ctx_and_sched() is %d\n", __func__, ret);
-	fflush(stderr);
-
 	if (ret)
 		free(ctx_config->ctxs);
 
@@ -2683,9 +2643,6 @@ int wd_alg_attrs_init(struct wd_init_attrs *attrs)
 	if (attrs->driver)
 		driver_type = attrs->driver->calc_type;
 
-	fprintf(stderr, "enter %s(), driver_type=%d\n", __func__, driver_type);
-	fflush(stderr);
-
 	switch (driver_type) {
 	case UADK_ALG_SOFT:
 	case UADK_ALG_CE_INSTR:
@@ -2725,16 +2682,12 @@ int wd_alg_attrs_init(struct wd_init_attrs *attrs)
 		}
 		break;
 	case UADK_ALG_HW:
-		fprintf(stderr, "in UADK_ALG_HW\n");
 		wd_get_alg_type(alg, alg_type);
 		attrs->alg = alg_type;
 
-		fprintf(stderr, "to call calloc(1, %ld), sizeof ctx_config\n", sizeof(*ctx_config));
 		ctx_config = calloc(1, sizeof(*ctx_config));
 		if (!ctx_config) {
 			WD_ERR("fail to alloc ctx config\n");
-			fprintf(stderr, "calloc returns non-NULL, failure.\n");
-			fflush(stderr);
 			return -WD_ENOMEM;
 		}
 		attrs->ctx_config = ctx_config;
