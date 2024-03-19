@@ -393,12 +393,20 @@ handle_t wd_request_ctx(struct uacce_dev *dev)
 	char *ptrRet = NULL;
 	int fd;
 
+	fprintf(stderr, "enter %s()\n", __func__);
+
 	if (!dev || !strlen(dev->dev_root))
 		return 0;
+	fprintf(stderr, "wdp0, %s()\n", __func__);
 
+	fprintf(stderr, "(uacce_dev) *dev->char_dev_path is: %s\n", dev->char_dev_path);
 	ptrRet = realpath(dev->char_dev_path, char_dev_path);
-	if (ptrRet == NULL)
+	fprintf(stderr, "wdp1.0, %s(), called realpath(), returns errno=%d\n", __func__, errno);
+	if (ptrRet == NULL) {
+		fprintf(stderr, "wdp1.1, %s(), ptrRet==NULL\n", __func__);
 		return 0;
+	}
+	fprintf(stderr, "wdp1, %s(), errno=%d\n", __func__, errno);
 
 	fd = open(char_dev_path, O_RDWR | O_CLOEXEC);
 	if (fd < 0) {
@@ -409,18 +417,22 @@ handle_t wd_request_ctx(struct uacce_dev *dev)
 	ctx = calloc(1, sizeof(struct wd_ctx_h));
 	if (!ctx)
 		goto close_fd;
+	fprintf(stderr, "wdp2, %s()\n", __func__);
 
 	ctx->dev_name = wd_get_accel_name(dev->char_dev_path, 0);
 	if (!ctx->dev_name)
 		goto free_ctx;
+	fprintf(stderr, "wdp3, %s()\n", __func__);
 
 	ctx->drv_name = wd_get_accel_name(dev->char_dev_path, 1);
 	if (!ctx->drv_name)
 		goto free_dev_name;
+	fprintf(stderr, "wdp4, %s()\n", __func__);
 
 	ctx->dev = wd_clone_dev(dev);
 	if (!ctx->dev)
 		goto free_drv_name;
+	fprintf(stderr, "wdp5, %s()\n", __func__);
 
 	ctx->fd = fd;
 
@@ -428,16 +440,22 @@ handle_t wd_request_ctx(struct uacce_dev *dev)
 
 	memcpy(ctx->dev_path, dev->char_dev_path, MAX_DEV_NAME_LEN);
 	ctx->dev_path[MAX_DEV_NAME_LEN - 1] = '\0';
+	fprintf(stderr, "wdp6, %s()\n", __func__);
+
 
 	return (handle_t)ctx;
 
 free_drv_name:
+	fprintf(stderr, "wdpe0, %s()\n", __func__);
 	free(ctx->drv_name);
 free_dev_name:
+	fprintf(stderr, "wdpe1, %s()\n", __func__);
 	free(ctx->dev_name);
 free_ctx:
+	fprintf(stderr, "wdpe2, %s()\n", __func__);
 	free(ctx);
 close_fd:
+	fprintf(stderr, "wdpe3, %s()\n", __func__);
 	close(fd);
 	return 0;
 }

@@ -469,7 +469,7 @@ int wd_cipher_init2_(char *alg, __u32 sched_type, int task_type, struct wd_ctx_p
 				wd_ctx_param_uninit(&cipher_ctx_params);
 				continue;
 			}
-			WD_ERR("fail to init alg attrs.\n");
+			WD_ERR("fail to init alg attrs. ret=%d\n", ret);
 			goto out_params_uninit;
 		}
 	}
